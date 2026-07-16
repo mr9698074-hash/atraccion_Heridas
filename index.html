@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Historias Interactivas</title>
+    <style>
+        /* --- RESET Y CONFIGURACIÓN MÓVIL --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Contenedor de la historia (Proporción exacta de celular / Stories) */
+        #story-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 480px; /* Se adapta a pantallas grandes manteniendo aspecto de cel */
+            max-height: 854px; 
+            background-color: #000000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+
+        /* --- BARRAS DE PROGRESO (Estilo Instagram) --- */
+        .progress-header {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            display: flex;
+            padding: 0 10px;
+            gap: 5px;
+            z-index: 10;
+        }
+
+        .progress-bar {
+            height: 3px;
+            flex-grow: 1;
+            background-color: rgba(255, 255, 255, 0.35);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #ffffff;
+            transition: width 0.1s linear;
+        }
+
+        .progress-fill.filled {
+            width: 100%;
+        }
+
+        /* --- CONTENEDOR DE SLIDES --- */
+        .slides-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Ajuste perfecto de tus imágenes */
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Cambia a 'cover' si prefieres que la imagen llene el 100% de la pantalla sin bordes negros, aunque 'contain' respeta tus proporciones originales */
+            background-color: #ffffff; /* Fondo blanco que combina con el fondo de tus imágenes */
+        }
+
+        /* --- ZONAS DE TOQUE PARA INTERACTUAR --- */
+        .tap-zones {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            z-index: 5;
+        }
+
+        .tap-left {
+            width: 33%; /* Tercio izquierdo para volver atrás */
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .tap-right {
+            width: 67%; /* Resto de la pantalla para avanzar */
+            height: 100%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="story-container">
+        
+        <!-- Barras de progreso superiores -->
+        <div class="progress-header" id="progress-header"></div>
+
+        <!-- Zonas de toque transparentes -->
+        <div class="tap-zones">
+            <div class="tap-left" id="btn-prev"></div>
+            <div class="tap-right" id="btn-next"></div>
+        </div>
+
+       <!-- Tus imágenes como diapositivas -->
+        <div class="slides-container">
+            <!-- Diapositiva 1 -->
+            <div class="slide active">
+                <img src="images/1.jpg" alt="Portada">
+            </div>
+
+            <!-- Diapositiva 2 -->
+            <div class="slide">
+                <img src="images/2.jpg" alt="Teoría">
+            </div>
+
+            <!-- Diapositiva 3 -->
+            <div class="slide">
+                <img src="images/3.jpg" alt="Abandono">
+            </div>
+
+            <!-- Diapositiva 4 -->
+            <div class="slide">
+                <img src="images/4.jpg" alt="Rechazo">
+            </div>
+
+            <!-- Diapositiva 5 -->
+            <div class="slide">
+                <img src="images/5.jpg" alt="Traición">
+            </div>
+
+            <!-- Diapositiva 6 -->
+            <div class="slide">
+                <img src="images/6.jpg" alt="Sanas">
+            </div>
+
+            <!-- Diapositiva 7 -->
+            <div class="slide">
+                <img src="images/7.jpg" alt="Gracias">
+            </div>
+        </div>
+    <!-- --- LÓGICA DE INTERACTIVIDAD --- -->
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const nextBtn = document.getElementById('btn-next');
+        const prevBtn = document.getElementById('btn-prev');
+        const progressHeader = document.getElementById('progress-header');
+        
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+
+        // Crear dinámicamente las barritas superiores según la cantidad de imágenes
+        for (let i = 0; i < totalSlides; i++) {
+            const bar = document.createElement('div');
+            bar.classList.add('progress-bar');
+            const fill = document.createElement('div');
+            fill.classList.add('progress-fill');
+            if (i === 0) fill.classList.add('filled');
+            bar.appendChild(fill);
+            progressHeader.appendChild(bar);
+        }
+
+        const progressFills = document.querySelectorAll('.progress-fill');
+
+        // Cambiar de slide y actualizar progresos
+        function updateSlide(index) {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = index;
+            slides[currentSlide].classList.add('active');
+
+            progressFills.forEach((fill, idx) => {
+                if (idx <= currentSlide) {
+                    fill.classList.add('filled');
+                } else {
+                    fill.classList.remove('filled');
+                }
+            });
+        }
+
+        // Eventos para interactuar con toques/clicks
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < totalSlides - 1) {
+                updateSlide(currentSlide + 1);
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                updateSlide(currentSlide - 1);
+            }
+        });
+
+        // Soporte de gestos (Swipe) para celular
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        const container = document.getElementById('story-container');
+
+        container.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        container.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const swipeThreshold = 50; // Sensibilidad del deslizamiento
+            if (touchEndX < touchStartX - swipeThreshold) {
+                if (currentSlide < totalSlides - 1) updateSlide(currentSlide + 1);
+            }
+            if (touchEndX > touchStartX + swipeThreshold) {
+                if (currentSlide > 0) updateSlide(currentSlide - 1);
+            }
+        }
+    </script>
+</body>
+</html>
